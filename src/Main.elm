@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http
+import Json.Encode as E
 import Result exposing (Result)
 
 
@@ -34,7 +35,6 @@ init =
 
 type Msg
     = GotResponse (Result Http.Error String)
-    | Clicked
     | ClearClicked
     | FunctionClicked String
     | UrlUpdated String
@@ -52,11 +52,8 @@ update msg model =
                 Err err ->
                     ( { model | status = Failure err }, Cmd.none )
 
-        Clicked ->
-            ( { status = Loading, bodyInput = "", urlInput = "" }, callFunction model.urlInput model.bodyInput )
-
         FunctionClicked url ->
-            ( { model | status = Loading }, callFunction url "function functoin fp" )
+            ( { model | status = Loading }, callFunction url (E.object [ ( "raw", E.string model.bodyInput ) ]) )
 
         ClearClicked ->
             ( { model | status = NotAsked }, Cmd.none )
@@ -68,11 +65,11 @@ update msg model =
             ( { model | bodyInput = val }, Cmd.none )
 
 
-callFunction : String -> String -> Cmd Msg
-callFunction url body =
+callFunction : String -> E.Value -> Cmd Msg
+callFunction url jsonValue =
     Http.post
         { expect = Http.expectString GotResponse
-        , body = Http.stringBody "text" body
+        , body = Http.jsonBody jsonValue
         , url = ".netlify/functions/" ++ url
         }
 
@@ -103,10 +100,10 @@ view model =
 inputFields : Model -> Html Msg
 inputFields model =
     div [ class "input-fields" ]
-        -- [ input [ type_ "text", value model.urlInput, onInput UrlUpdated ] []
-        -- , input [ type_ "text", value model.bodyInput, onInput BodyUpdated ] []
-        [ button [ onClick <| FunctionClicked "log" ] [ text "log" ]
-        , button [ onClick <| ClearClicked ] [ text "Clear" ]
+        [ label [ for "raw-data" ] [ text "raw: " ]
+        , input [ name "raw-data", value model.bodyInput, onInput BodyUpdated ] []
+        , button [ name "log", onClick <| FunctionClicked "log" ] [ text "log" ]
+        , button [ name "clear", onClick <| ClearClicked ] [ text "Clear" ]
         ]
 
 
