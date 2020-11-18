@@ -21,12 +21,12 @@ type Status
 
 
 type alias Model =
-    { status : Status, urlInput : String, bodyInput : String }
+    { status : Status, bodyInput : String }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model NotAsked "" "", Cmd.none )
+    ( Model NotAsked "", Cmd.none )
 
 
 
@@ -37,8 +37,7 @@ type Msg
     = GotResponse (Result Http.Error String)
     | ClearClicked
     | FunctionClicked String
-    | UrlUpdated String
-    | BodyUpdated String
+    | InputChanged String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -58,10 +57,7 @@ update msg model =
         ClearClicked ->
             ( { model | status = NotAsked }, Cmd.none )
 
-        UrlUpdated val ->
-            ( { model | urlInput = val }, Cmd.none )
-
-        BodyUpdated val ->
+        InputChanged val ->
             ( { model | bodyInput = val }, Cmd.none )
 
 
@@ -101,7 +97,7 @@ inputFields : Model -> Html Msg
 inputFields model =
     div [ class "input-fields" ]
         [ label [ for "raw-data" ] [ text "raw: " ]
-        , input [ name "raw-data", value model.bodyInput, onInput BodyUpdated ] []
+        , input [ name "raw-data", value model.bodyInput, onInput InputChanged ] []
         , button [ name "log", onClick <| FunctionClicked "log" ] [ text "log" ]
         , button [ name "clear", onClick <| ClearClicked ] [ text "Clear" ]
         ]

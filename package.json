@@ -8,6 +8,9 @@
   },
   "scripts": {
     "start": "ntl dev",
+    "build": "ntl build",
+    "deploy": "ntl deploy --prod",
+    "up": "ntl build && ntl deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,5 +26,8 @@
   "homepage": "https://github.com/johan-st/elm-log#readme",
   "devDependencies": {
     "create-elm-app": "^5.14.0"
+  },
+  "dependencies": {
+    "mongodb": "^3.6.3"
   }
 }
