@@ -4,7 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
-import Http
+import Http exposing (Error(..))
 import Json.Encode as E
 import Result exposing (Result)
 
@@ -36,7 +36,9 @@ init =
 type Msg
     = GotResponse (Result Http.Error String)
     | ClearClicked
-    | FunctionClicked String
+    | LogBtnClicked
+    | ReadBtnClicked
+    | FindBtnClicked
     | InputChanged String
 
 
@@ -51,8 +53,14 @@ update msg model =
                 Err err ->
                     ( { model | status = Failure err }, Cmd.none )
 
-        FunctionClicked url ->
-            ( { model | status = Loading }, callFunction url (E.object [ ( "raw", E.string model.bodyInput ) ]) )
+        LogBtnClicked ->
+            ( { model | status = Loading }, postLog (E.object [ ( "raw", E.string model.bodyInput ) ]) )
+
+        ReadBtnClicked ->
+            ( { model | status = Loading }, readLog model.bodyInput )
+
+        FindBtnClicked ->
+            ( { model | status = Loading }, getLog model.bodyInput )
 
         ClearClicked ->
             ( { model | status = NotAsked }, Cmd.none )
@@ -61,12 +69,28 @@ update msg model =
             ( { model | bodyInput = val }, Cmd.none )
 
 
-callFunction : String -> E.Value -> Cmd Msg
-callFunction url jsonValue =
+getLog : String -> Cmd Msg
+getLog query =
+    Http.get
+        { expect = Http.expectString GotResponse
+        , url = ".netlify/functions/log?q=" ++ query
+        }
+
+
+readLog : String -> Cmd Msg
+readLog query =
+    Http.get
+        { expect = Http.expectString GotResponse
+        , url = ".netlify/functions/readLogs?q=" ++ query
+        }
+
+
+postLog : E.Value -> Cmd Msg
+postLog jsonValue =
     Http.post
         { expect = Http.expectString GotResponse
         , body = Http.jsonBody jsonValue
-        , url = ".netlify/functions/" ++ url
+        , url = ".netlify/functions/log"
         }
 
 
@@ -86,7 +110,7 @@ view model =
                 text "Loading."
 
             Failure err ->
-                text "Error."
+                text <| toString err
 
             Success res ->
                 pre [] [ text res ]
@@ -98,9 +122,30 @@ inputFields model =
     div [ class "input-fields" ]
         [ label [ for "raw-data" ] [ text "raw: " ]
         , input [ name "raw-data", value model.bodyInput, onInput InputChanged ] []
-        , button [ name "log", onClick <| FunctionClicked "log" ] [ text "log" ]
+        , button [ name "log", onClick <| LogBtnClicked ] [ text "log" ]
+        , button [ name "read", onClick <| ReadBtnClicked ] [ text "read" ]
+        , button [ name "find", onClick <| FindBtnClicked ] [ text "find" ]
         , button [ name "clear", onClick <| ClearClicked ] [ text "Clear" ]
         ]
+
+
+toString : Http.Error -> String
+toString err =
+    case err of
+        BadUrl str ->
+            "Bad Url: " ++ str
+
+        Timeout ->
+            "Timeout"
+
+        NetworkError ->
+            "Network Error"
+
+        BadStatus code ->
+            "Bad Status: " ++ String.fromInt code
+
+        BadBody str ->
+            "Bad Body: " ++ str
 
 
 
