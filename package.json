@@ -26,8 +26,5 @@
   "homepage": "https://github.com/johan-st/elm-log#readme",
   "devDependencies": {
     "create-elm-app": "^5.14.0"
-  },
-  "dependencies": {
-    "mongodb": "^3.6.3"
   }
 }

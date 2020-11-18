@@ -1,0 +1,14 @@
+{
+  "name": "fauna-crud",
+  "version": "1.0.0",
+  "description": "netlify functions:create - CRUD functionality with Fauna DB",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "johan",
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": "^2.14.2"
+  }
+}

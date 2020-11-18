@@ -73,7 +73,7 @@ getLog : String -> Cmd Msg
 getLog query =
     Http.get
         { expect = Http.expectString GotResponse
-        , url = ".netlify/functions/log?q=" ++ query
+        , url = ".netlify/functions/db?q=" ++ query
         }
 
 
