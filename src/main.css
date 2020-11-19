@@ -28,7 +28,6 @@ img {
 
 .input-fields {
   margin: 0 auto;
-  height: 5rem;
   width: 20rem;
   display: flex;
   flex-direction: column;

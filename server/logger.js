@@ -1,7 +1,7 @@
 const uuid = require('uuid');
 const chalk = require('chalk');
 
-const logger = logs => (req, res, next) => {
+const logger = logHub => (req, res, next) => {
   req.id = uuid.v4();
   const id = chalk.grey(req.id);
   const query = req.query;
@@ -21,8 +21,8 @@ const logger = logs => (req, res, next) => {
       break;
   }
 
-  const log = new logs({
-    type_: 'request',
+  const log = new logHub({
+    logType: 'HTTP_request',
     data: {
       id: req.id,
       method: req.method,
@@ -31,7 +31,6 @@ const logger = logs => (req, res, next) => {
       body,
     },
   });
-  // log.save();
   if (log.data.path === '/logs') {
     console.log(id, method, path, body, query);
     log.save();

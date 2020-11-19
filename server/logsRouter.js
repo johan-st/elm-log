@@ -1,24 +1,26 @@
 const express = require('express');
 const router = express.Router();
 
-const logsRouter = logs => {
+const logsRouter = logHub => {
   // OPERATIONS
   const postLog = (req, res) => {
-    const log = new logs({ data: req.body.data });
+    const log = new logHub({ data: req.body.data });
     res.status = 200;
-    log.save().then(a => res.json(a));
+    log.save().then(data => res.json({ result: [data] }));
   };
 
   const getLogs = (req, res) => {
     if (req.query.q) {
-      logs.find({ data: { $regex: req.query.q, $options: 'i' } }).then(data => {
-        res.status = 200;
-        res.json({ query: req.query.q, result: data });
-      });
+      logHub
+        .find({ data: { $regex: req.query.q, $options: 'i' } })
+        .then(data => {
+          res.status = 200;
+          res.json({ query: req.query.q, result: data });
+        });
     } else {
-      logs.find({}).then(logs => {
+      logHub.find({}).then(logHub => {
         res.status = 200;
-        res.json({ result: logs });
+        res.json({ result: logHub });
       });
     }
   };
