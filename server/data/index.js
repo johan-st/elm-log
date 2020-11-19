@@ -17,7 +17,7 @@ const options = {
 // console.log(chalk.white(uri));
 // console.log(chalk.grey(JSON.stringify(options, null, 2)));
 
-const logs = () => {
+const logs = async () => {
   console.log(
     chalk.yellow('[MongoDB]'),
     chalk.grey('Connecting to'),
@@ -26,7 +26,7 @@ const logs = () => {
     options.user
   );
 
-  mongoose.connect(uri, options).catch(err => {
+  await mongoose.connect(uri, options).catch(err => {
     console.log(chalk.red('- connection error -'));
   });
 
@@ -41,19 +41,25 @@ const logs = () => {
 
   // When the connection is disconnected
   mongoose.connection.on('disconnected', () => {
-    console.log(chalk.cyan('[MongoDB]'), 'connection disconnected');
+    console.log(chalk.yellow('[MongoDB]'), 'connection disconnected');
   });
 
   process.on('SIGINT', () => {
     mongoose.connection.close(() => {
       console.log(
-        chalk.cyan('[MongoDB]'),
+        chalk.yellow('[MongoDB]'),
         'App terminated, closing mongo connections'
       );
       process.exit(0);
     });
   });
-  return mongoose;
+
+  // SCHEMA
+  return mongoose.model('Log', {
+    type_: String,
+    data: {},
+    updated: { type: Date, default: Date.now },
+  });
 };
 
 module.exports = { logs };

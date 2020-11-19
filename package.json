@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "ntl dev",
+    "start": "elm-app start",
     "build": "ntl build",
     "deploy": "ntl deploy --prod",
     "up": "ntl build && ntl deploy",

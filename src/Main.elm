@@ -21,7 +21,7 @@ type Status
 
 
 type alias Model =
-    { status : Status, bodyInput : String }
+    { status : Status, input : String }
 
 
 init : ( Model, Cmd Msg )
@@ -54,34 +54,34 @@ update msg model =
                     ( { model | status = Failure err }, Cmd.none )
 
         LogBtnClicked ->
-            ( { model | status = Loading }, postLog (E.object [ ( "raw", E.string model.bodyInput ) ]) )
+            ( { model | status = Loading }, postLog (E.object [ ( "log", E.string model.input ) ]) )
 
         ReadBtnClicked ->
-            ( { model | status = Loading }, readLog model.bodyInput )
+            ( { model | status = Loading }, getLogs )
 
         FindBtnClicked ->
-            ( { model | status = Loading }, getLog model.bodyInput )
+            ( { model | status = Loading }, queryLogs model.input )
 
         ClearClicked ->
             ( { model | status = NotAsked }, Cmd.none )
 
         InputChanged val ->
-            ( { model | bodyInput = val }, Cmd.none )
+            ( { model | input = val }, Cmd.none )
 
 
-getLog : String -> Cmd Msg
-getLog query =
+queryLogs : String -> Cmd Msg
+queryLogs query =
     Http.get
         { expect = Http.expectString GotResponse
-        , url = "/db?q=" ++ query
+        , url = "/logs?q=" ++ query
         }
 
 
-readLog : String -> Cmd Msg
-readLog query =
+getLogs : Cmd Msg
+getLogs =
     Http.get
         { expect = Http.expectString GotResponse
-        , url = "/readLogs?q=" ++ query
+        , url = "/logs"
         }
 
 
@@ -120,11 +120,11 @@ view model =
 inputFields : Model -> Html Msg
 inputFields model =
     div [ class "input-fields" ]
-        [ label [ for "raw-data" ] [ text "raw: " ]
-        , input [ name "raw-data", value model.bodyInput, onInput InputChanged ] []
+        [ label [ for "raw-data" ] [ text "input: " ]
+        , input [ name "raw-data", value model.input, onInput InputChanged ] []
         , button [ name "log", onClick <| LogBtnClicked ] [ text "log" ]
-        , button [ name "read", onClick <| ReadBtnClicked ] [ text "read" ]
-        , button [ name "find", onClick <| FindBtnClicked ] [ text "find" ]
+        , button [ name "get logs", onClick <| ReadBtnClicked ] [ text "get logs" ]
+        , button [ name "search", onClick <| FindBtnClicked ] [ text "search" ]
         , button [ name "clear", onClick <| ClearClicked ] [ text "Clear" ]
         ]
 

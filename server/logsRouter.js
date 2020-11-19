@@ -1,17 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const chalk = require('chalk');
-const data = require('./data');
-const logs = data.logs();
-const Log = logs.model('Log', {
-  log: String,
-  updated: { type: Date, default: Date.now },
-});
 
-router.post('*', (req, res) => {
-  const log = new Log({ log: req.body.log });
-  res.status = 200;
-  log.save().then(e => res.json(e));
-});
+const logsRouter = logs => {
+  // OPERATIONS
+  const postLog = (req, res) => {
+    const log = new logs({ log: req.body.data });
+    res.status = 200;
+    log.save().then(a => res.json(a));
+  };
 
-module.exports = { router };
+  const getLogs = (req, res) => {
+    if (req.query.q) {
+      logs.find({ data: { $regex: req.query.q, $options: 'i' } }).then(data => {
+        res.status = 200;
+        res.json({ query: req.query.q, result: data });
+      });
+    } else {
+      logs.find({}).then(logs => {
+        res.status = 200;
+        res.json({ result: logs });
+      });
+    }
+  };
+
+  // ROUTES
+  router.get('/', getLogs);
+  router.post('/', postLog);
+  return router;
+};
+module.exports = { logsRouter };
