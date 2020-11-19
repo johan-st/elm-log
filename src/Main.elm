@@ -73,7 +73,7 @@ getLog : String -> Cmd Msg
 getLog query =
     Http.get
         { expect = Http.expectString GotResponse
-        , url = ".netlify/functions/db?q=" ++ query
+        , url = "/db?q=" ++ query
         }
 
 
@@ -81,7 +81,7 @@ readLog : String -> Cmd Msg
 readLog query =
     Http.get
         { expect = Http.expectString GotResponse
-        , url = ".netlify/functions/readLogs?q=" ++ query
+        , url = "/readLogs?q=" ++ query
         }
 
 
@@ -90,7 +90,7 @@ postLog jsonValue =
     Http.post
         { expect = Http.expectString GotResponse
         , body = Http.jsonBody jsonValue
-        , url = ".netlify/functions/log"
+        , url = "/logs"
         }
 
 

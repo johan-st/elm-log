@@ -23,8 +23,5 @@
   "bugs": {
     "url": "https://github.com/johan-st/elm-log/issues"
   },
-  "homepage": "https://github.com/johan-st/elm-log#readme",
-  "devDependencies": {
-    "create-elm-app": "^5.14.0"
-  }
+  "homepage": "https://github.com/johan-st/elm-log#readme"
 }
