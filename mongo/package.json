@@ -1,0 +1,12 @@
+{
+  "name": "mongo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "up": "docker stack deploy -c ./stack.yml mongo",
+    "down": "docker stack rm mongo"
+  },
+  "author": "",
+  "license": "ISC"
+}
