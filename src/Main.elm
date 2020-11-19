@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (Error(..))
+import Json.Decode as D
 import Json.Encode as E
 import Result exposing (Result)
 
@@ -16,12 +17,12 @@ import Result exposing (Result)
 type Status
     = NotAsked
     | Loading
-    | Success String
+    | Success (List Log)
     | Failure Http.Error
 
 
 type alias Model =
-    { status : Status, bodyInput : String }
+    { status : Status, input : String }
 
 
 init : ( Model, Cmd Msg )
@@ -34,7 +35,7 @@ init =
 
 
 type Msg
-    = GotResponse (Result Http.Error String)
+    = GotResponse (Result Http.Error (List Log))
     | ClearClicked
     | LogBtnClicked
     | ReadBtnClicked
@@ -47,50 +48,50 @@ update msg model =
     case msg of
         GotResponse res ->
             case res of
-                Ok response ->
-                    ( { model | status = Success response }, Cmd.none )
+                Ok logs ->
+                    ( { model | status = Success logs }, Cmd.none )
 
                 Err err ->
                     ( { model | status = Failure err }, Cmd.none )
 
         LogBtnClicked ->
-            ( { model | status = Loading }, postLog (E.object [ ( "raw", E.string model.bodyInput ) ]) )
+            ( { model | status = Loading }, postLog <| newLogEncoder model.input )
 
         ReadBtnClicked ->
-            ( { model | status = Loading }, readLog model.bodyInput )
+            ( { model | status = Loading }, getLogs )
 
         FindBtnClicked ->
-            ( { model | status = Loading }, getLog model.bodyInput )
+            ( { model | status = Loading }, queryLogs model.input )
 
         ClearClicked ->
             ( { model | status = NotAsked }, Cmd.none )
 
         InputChanged val ->
-            ( { model | bodyInput = val }, Cmd.none )
+            ( { model | input = val }, Cmd.none )
 
 
-getLog : String -> Cmd Msg
-getLog query =
+queryLogs : String -> Cmd Msg
+queryLogs query =
     Http.get
-        { expect = Http.expectString GotResponse
-        , url = ".netlify/functions/db?q=" ++ query
+        { expect = Http.expectJson GotResponse logHubResponseDecoder
+        , url = "/logs?q=" ++ query
         }
 
 
-readLog : String -> Cmd Msg
-readLog query =
+getLogs : Cmd Msg
+getLogs =
     Http.get
-        { expect = Http.expectString GotResponse
-        , url = ".netlify/functions/readLogs?q=" ++ query
+        { expect = Http.expectJson GotResponse logHubResponseDecoder
+        , url = "/logs"
         }
 
 
 postLog : E.Value -> Cmd Msg
 postLog jsonValue =
     Http.post
-        { expect = Http.expectString GotResponse
+        { expect = Http.expectJson GotResponse logHubResponseDecoder
         , body = Http.jsonBody jsonValue
-        , url = ".netlify/functions/log"
+        , url = "/logs"
         }
 
 
@@ -112,19 +113,28 @@ view model =
             Failure err ->
                 text <| toString err
 
-            Success res ->
-                pre [] [ text res ]
+            Success logs ->
+                div [] <|
+                    List.map
+                        (\log ->
+                            div []
+                                [ p [] [ text <| "id: " ++ log.id ]
+                                , p [] [ text <| "data: " ++ log.data ]
+                                , p [] [ text <| "updated: " ++ log.updated ]
+                                ]
+                        )
+                        logs
         ]
 
 
 inputFields : Model -> Html Msg
 inputFields model =
     div [ class "input-fields" ]
-        [ label [ for "raw-data" ] [ text "raw: " ]
-        , input [ name "raw-data", value model.bodyInput, onInput InputChanged ] []
+        [ label [ for "raw-data" ] [ text "input: " ]
+        , input [ name "raw-data", value model.input, onInput InputChanged ] []
         , button [ name "log", onClick <| LogBtnClicked ] [ text "log" ]
-        , button [ name "read", onClick <| ReadBtnClicked ] [ text "read" ]
-        , button [ name "find", onClick <| FindBtnClicked ] [ text "find" ]
+        , button [ name "get logs", onClick <| ReadBtnClicked ] [ text "get logs" ]
+        , button [ name "search", onClick <| FindBtnClicked ] [ text "search" ]
         , button [ name "clear", onClick <| ClearClicked ] [ text "Clear" ]
         ]
 
@@ -146,6 +156,40 @@ toString err =
 
         BadBody str ->
             "Bad Body: " ++ str
+
+
+
+---- API SPECIFIC ----
+
+
+logHubResponseDecoder : D.Decoder (List Log)
+logHubResponseDecoder =
+    D.field "result" (D.list logDecoder)
+
+
+
+---- LOG ----
+
+
+type alias Log =
+    { id : String
+    , data : String
+    , updated : String
+    }
+
+
+logDecoder : D.Decoder Log
+logDecoder =
+    D.map3
+        Log
+        (D.field "_id" D.string)
+        (D.field "data" D.string)
+        (D.field "updated" D.string)
+
+
+newLogEncoder : String -> E.Value
+newLogEncoder data =
+    E.object [ ( "data", E.string data ) ]
 
 
 
