@@ -12,12 +12,15 @@ const { logsRouter } = require('./logsRouter');
 require('./data')
   .logs()
   .then(logs => {
-    app.use('/static', express.static(path.join(__dirname, 'public')));
+    // MIDDLEWARE
     app.use(bodyParser.json());
     app.use(logger(logs));
 
+    // ROUTES
     app.use('/logs', logsRouter(logs));
+    app.use(express.static('../build'));
 
+    // SERVER INIT
     app.listen(port, () => {
       console.log(
         chalk.green(`[Express]`),

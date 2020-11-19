@@ -31,11 +31,11 @@ const logger = logHub => (req, res, next) => {
       body,
     },
   });
-  if (log.data.path === '/logs') {
-    console.log(id, method, path, body, query);
-    log.save();
-    next();
-  }
+  // if (log.data.path === '/logs') {
+  console.log(id, method, path, body, query);
+  log.save();
+  next();
+  // }
 };
 
 module.exports = { logger };
