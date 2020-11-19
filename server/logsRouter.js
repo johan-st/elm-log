@@ -4,7 +4,7 @@ const router = express.Router();
 const logsRouter = logs => {
   // OPERATIONS
   const postLog = (req, res) => {
-    const log = new logs({ log: req.body.data });
+    const log = new logs({ data: req.body.data });
     res.status = 200;
     log.save().then(a => res.json(a));
   };

@@ -8,13 +8,11 @@ const { env } = process;
 const chalk = require('chalk');
 const port = env.EXPRESS_PORT;
 const { logsRouter } = require('./logsRouter');
-const data = require('./data');
 
-data
+require('./data')
   .logs()
   .then(logs => {
     app.use('/static', express.static(path.join(__dirname, 'public')));
-
     app.use(bodyParser.json());
     app.use(logger(logs));
 

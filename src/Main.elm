@@ -54,7 +54,7 @@ update msg model =
                     ( { model | status = Failure err }, Cmd.none )
 
         LogBtnClicked ->
-            ( { model | status = Loading }, postLog (E.object [ ( "log", E.string model.input ) ]) )
+            ( { model | status = Loading }, postLog (E.object [ ( "data", E.string model.input ) ]) )
 
         ReadBtnClicked ->
             ( { model | status = Loading }, getLogs )
