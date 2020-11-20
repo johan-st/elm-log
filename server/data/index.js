@@ -2,20 +2,20 @@ const { env } = process;
 const chalk = require('chalk');
 const mongoose = require('mongoose');
 
-const uri = env.MONGODB_URI_LOCAL + '/log-hub';
+const uri = env.MONGODB_URI + '/' + env.MONGODB_COLLECTION;
 const options = {
-  auth: {
-    authSource: 'admin',
-  },
-  user: env.MONGODB_USER_LOCAL,
-  pass: env.MONGODB_PW_LOCAL,
+  // auth: {
+  // authSource: 'admin',
+  // },
+  // user: env.MONGODB_USER,
+  // pass: env.MONGODB_PW,
   keepAlive: true,
   keepAliveInitialDelay: 300000,
   useNewUrlParser: true,
   useUnifiedTopology: true,
 };
-// console.log(chalk.white(uri));
-// console.log(chalk.grey(JSON.stringify(options, null, 2)));
+console.log(chalk.white(uri));
+console.log(chalk.grey(JSON.stringify(options, null, 2)));
 
 const logs = async () => {
   console.log(
@@ -28,6 +28,8 @@ const logs = async () => {
 
   await mongoose.connect(uri, options).catch(err => {
     console.log(chalk.red('- connection error -'));
+    console.log(err);
+    process.exit(1);
   });
 
   mongoose.connection.on('connected', () => {

@@ -31,9 +31,8 @@ const logger = logHub => (req, res, next) => {
       body,
     },
   });
-  // if (log.data.path === '/logs') {
   console.log(id, method, path, body, query);
-  log.save();
+  // log.save();
   next();
   // }
 };
