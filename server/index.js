@@ -3,13 +3,12 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const { logger } = require('./logger');
-const path = require('path');
 const { env } = process;
 const chalk = require('chalk');
 const port = env.EXPRESS_PORT;
 const { logsRouter } = require('./logsRouter');
 
-require('./data')
+require('./database')
   .logs()
   .then(logs => {
     // MIDDLEWARE

@@ -3,10 +3,8 @@ const chalk = require('chalk');
 
 const logger = logHub => (req, res, next) => {
   req.id = uuid.v4();
-  const id = chalk.grey(req.id);
   const query = req.query;
   const body = req.body;
-  const path = chalk.green(req.path);
 
   let method;
   switch (req.method) {
@@ -27,11 +25,17 @@ const logger = logHub => (req, res, next) => {
       id: req.id,
       method: req.method,
       path: req.path,
-      query,
-      body,
+      body: req.body,
+      query: req.query,
     },
   });
-  console.log(id, method, path, body, query);
+  console.log(
+    chalk.grey(req.id),
+    method,
+    chalk.green(req.path),
+    req.body,
+    req.query
+  );
   // log.save();
   next();
   // }

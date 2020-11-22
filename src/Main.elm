@@ -117,10 +117,11 @@ view model =
                 div [] <|
                     List.map
                         (\log ->
-                            div []
-                                [ p [] [ text <| "id: " ++ log.id ]
-                                , p [] [ text <| "data: " ++ log.data ]
-                                , p [] [ text <| "updated: " ++ log.updated ]
+                            div [ class "log" ]
+                                [ p [ class "log__id" ] [ text <| "id: " ++ log.id ]
+                                , p [ class "log__time" ] [ text <| "time: " ++ log.time ]
+                                , p [ class "log__type" ] [ text <| "type: " ++ log.logType ]
+                                , p [ class "log__data" ] [ text <| "log: " ++ log.data ]
                                 ]
                         )
                         logs
@@ -162,9 +163,13 @@ toString err =
 ---- API SPECIFIC ----
 
 
+type alias LogHubResponse =
+    { ok : Bool, data : List Log }
+
+
 logHubResponseDecoder : D.Decoder (List Log)
 logHubResponseDecoder =
-    D.field "result" (D.list logDecoder)
+    D.field "data" (D.list logDecoder)
 
 
 
@@ -173,18 +178,24 @@ logHubResponseDecoder =
 
 type alias Log =
     { id : String
-    , data : String
-    , updated : String
+    , time : String
+    , logType : String
+    , data : ReqLog
     }
+
+
+type alias ReqLog =
+    String
 
 
 logDecoder : D.Decoder Log
 logDecoder =
-    D.map3
+    D.map4
         Log
         (D.field "_id" D.string)
+        (D.field "time" D.string)
+        (D.field "logType" D.string)
         (D.field "data" D.string)
-        (D.field "updated" D.string)
 
 
 newLogEncoder : String -> E.Value

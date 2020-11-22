@@ -8,22 +8,18 @@
 [data-elm-hot='true'] {
   height: inherit;
 }
-
+:root {
+  --clr-muted: #666699;
+  --clr-muted2: hsl(240, 12%, 30%);
+  --clr-font: #8ec4ee;
+  --clr-bg: #202029;
+}
 body {
   font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande',
     'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
   margin: 0;
-  color: #8ec4ee;
-  background-color: #202029;
-}
-
-h1 {
-  font-size: 30px;
-}
-
-img {
-  margin: 20px 0;
-  max-width: 200px;
+  color: var(--clr-font);
+  background-color: var(--clr-bg);
 }
 
 .input-fields {
@@ -31,4 +27,22 @@ img {
   width: 20rem;
   display: flex;
   flex-direction: column;
+}
+
+.log {
+  margin: 5px 20px;
+  border-left: 1px solid var(--clr-muted);
+  border-bottom: 1px solid var(--clr-muted);
+}
+.log > * {
+  font-family: monospace;
+  display: inline-block;
+  margin: 0 10px;
+  width: max-content;
+  border-bottom: 1px solid var(--clr-muted2);
+  color: var(--clr-muted);
+}
+.log__data {
+  display: block;
+  color: var(--clr-font);
 }

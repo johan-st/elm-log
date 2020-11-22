@@ -2,38 +2,46 @@ const { env } = process;
 const chalk = require('chalk');
 const mongoose = require('mongoose');
 
-const uri = env.MONGODB_URI + '/' + env.MONGODB_COLLECTION;
+const uri = env.MONGO_URI;
 const options = {
-  // auth: {
-  // authSource: 'admin',
-  // },
-  // user: env.MONGODB_USER,
-  // pass: env.MONGODB_PW,
+  auth: {
+    authSource: 'log-hub',
+  },
+  user: env.MONGO_USER,
+  pass: env.MONGO_PW,
   keepAlive: true,
   keepAliveInitialDelay: 300000,
   useNewUrlParser: true,
   useUnifiedTopology: true,
 };
-console.log(chalk.white(uri));
-console.log(chalk.grey(JSON.stringify(options, null, 2)));
+// console.log(chalk.white(uri));
+// console.log(chalk.grey(JSON.stringify(options, null, 2)));
 
 const logs = async () => {
   console.log(
-    chalk.yellow('[MongoDB]'),
-    chalk.grey('Connecting to'),
+    chalk.yellowBright('[MongoDB]'),
+    chalk.yellow('Connecting to'),
     uri,
-    chalk.grey('with'),
+    chalk.yellow('with'),
     options.user
   );
 
   await mongoose.connect(uri, options).catch(err => {
-    console.log(chalk.red('- connection error -'));
+    console.log(
+      chalk.redBright('[MongoDB]'),
+      chalk.red('- connection error -')
+    );
     console.log(err);
     process.exit(1);
   });
 
+  // TODO: why is this not printing?
   mongoose.connection.on('connected', () => {
-    console.log(chalk.green('[MongoDB]'), chalk.grey('connected to '), uri);
+    console.log(
+      chalk.greenBright('[MongoDB]'),
+      chalk.green('connected to '),
+      uri
+    );
   });
 
   // If the connection throws an error
@@ -43,14 +51,17 @@ const logs = async () => {
 
   // When the connection is disconnected
   mongoose.connection.on('disconnected', () => {
-    console.log(chalk.yellow('[MongoDB]'), 'connection disconnected');
+    console.log(
+      chalk.yellowBright('[MongoDB]'),
+      chalk.yellow('connection disconnected')
+    );
   });
 
   process.on('SIGINT', () => {
     mongoose.connection.close(() => {
       console.log(
-        chalk.yellow('[MongoDB]'),
-        'App terminated, closing mongo connections'
+        chalk.yellowBright('[MongoDB]'),
+        chalk.yellow('App terminated, closing mongo connections')
       );
       process.exit(0);
     });
@@ -58,9 +69,9 @@ const logs = async () => {
 
   // SCHEMA
   return mongoose.model('Log', {
-    type_: String,
+    logType: String,
     data: {},
-    updated: { type: Date, default: Date.now },
+    time: { type: Date, default: Date.now },
   });
 };
 
