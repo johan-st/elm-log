@@ -1,5 +1,3 @@
-[![Netlify Status](https://api.netlify.com/api/v1/badges/c3e5f0da-4911-4c0e-a8c1-245bb944c88d/deploy-status)](https://app.netlify.com/sites/elm-log/deploys)
-
 # Elm-Log
 
 ## ui for my loggs.
