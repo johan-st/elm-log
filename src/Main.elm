@@ -27,7 +27,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model NotAsked "", Cmd.none )
+    ( Model NotAsked "", getLogs )
 
 
 
