@@ -21,13 +21,22 @@ type Status
     | Failure Http.Error
 
 
+type Page
+    = ListLog
+    | AddLog String
+
+
+type alias Filter =
+    { logType : Maybe String }
+
+
 type alias Model =
-    { status : Status, input : String }
+    { status : Status, input : String, filter : Filter }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model NotAsked "", getLogs )
+    ( Model NotAsked "" { logType = Nothing }, getLogs )
 
 
 
@@ -37,10 +46,11 @@ init =
 type Msg
     = GotResponse (Result Http.Error (List Log))
     | ClearClicked
-    | LogBtnClicked
-    | ReadBtnClicked
-    | FindBtnClicked
+    | LogClicked
+    | ReadClicked
+    | FindClicked
     | InputChanged String
+    | FilterChanged
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -54,13 +64,13 @@ update msg model =
                 Err err ->
                     ( { model | status = Failure err }, Cmd.none )
 
-        LogBtnClicked ->
+        LogClicked ->
             ( { model | status = Loading }, postLog <| newLogEncoder model.input )
 
-        ReadBtnClicked ->
+        ReadClicked ->
             ( { model | status = Loading }, getLogs )
 
-        FindBtnClicked ->
+        FindClicked ->
             ( { model | status = Loading }, queryLogs model.input )
 
         ClearClicked ->
@@ -68,6 +78,9 @@ update msg model =
 
         InputChanged val ->
             ( { model | input = val }, Cmd.none )
+
+        FilterChanged ->
+            ( model, Cmd.none )
 
 
 queryLogs : String -> Cmd Msg
@@ -114,17 +127,7 @@ view model =
                 text <| toString err
 
             Success logs ->
-                div [] <|
-                    List.map
-                        (\log ->
-                            div [ class "log" ]
-                                [ p [ class "log__id" ] [ text <| "id: " ++ log.id ]
-                                , p [ class "log__time" ] [ text <| "time: " ++ log.time ]
-                                , p [ class "log__type" ] [ text <| "type: " ++ log.logType ]
-                                , p [ class "log__data" ] [ text <| "log: " ++ log.data ]
-                                ]
-                        )
-                        logs
+                div [] <| logList (List.reverse logs)
         ]
 
 
@@ -133,11 +136,30 @@ inputFields model =
     div [ class "input-fields" ]
         [ label [ for "raw-data" ] [ text "input: " ]
         , input [ name "raw-data", value model.input, onInput InputChanged ] []
-        , button [ name "log", onClick <| LogBtnClicked ] [ text "log" ]
-        , button [ name "get logs", onClick <| ReadBtnClicked ] [ text "get logs" ]
-        , button [ name "search", onClick <| FindBtnClicked ] [ text "search" ]
-        , button [ name "clear", onClick <| ClearClicked ] [ text "Clear" ]
+        , btn "log string" LogClicked
+        , btn "list logs" ReadClicked
+        , btn "search" FindClicked
+        , btn "clear" ClearClicked
         ]
+
+
+logList : List Log -> List (Html Msg)
+logList list =
+    List.map
+        (\log ->
+            div [ class "log" ]
+                [ p [ class "log__id" ] [ text <| "id: " ++ log.id ]
+                , p [ class "log__time" ] [ text <| "time: " ++ log.time ]
+                , p [ class "log__type" ] [ text <| "type: " ++ log.logType ]
+                , p [ class "log__data" ] [ text <| "log: " ++ log.data ]
+                ]
+        )
+        list
+
+
+btn : String -> Msg -> Html Msg
+btn str msg =
+    button [ name str, onClick msg ] [ text str ]
 
 
 toString : Http.Error -> String
