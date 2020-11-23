@@ -11,7 +11,7 @@ import Html exposing (Html)
 import Http exposing (Error(..))
 import Json.Decode as D
 import Json.Encode as E
-import Log exposing (Log, LogHubResponse, logDecoder, logHubResponseDecoder, newLogEncoder)
+import Log exposing (GenericLog, LogHubResponse, logDecoder, logHubResponseDecoder, newLogEncoder)
 import Result exposing (Result)
 
 
@@ -21,7 +21,8 @@ import Result exposing (Result)
 
 type Status
     = Loading
-    | Success LogHubResponse
+    | Reloading
+    | Success
     | Failure Http.Error
 
 
@@ -35,12 +36,12 @@ type alias Filter =
 
 
 type alias Model =
-    { status : Status, input : String, filter : Filter }
+    { status : Status, data : Maybe LogHubResponse, input : String, filter : Filter }
 
 
 initialModel : Model
 initialModel =
-    { status = Loading, input = "", filter = { logType = Nothing } }
+    { status = Loading, data = Nothing, input = "", filter = { logType = Nothing } }
 
 
 init : ( Model, Cmd Msg )
@@ -68,19 +69,19 @@ update msg model =
         GotResponse res ->
             case res of
                 Ok logs ->
-                    ( { model | status = Success logs }, Cmd.none )
+                    ( { model | status = Success, data = Just logs }, Cmd.none )
 
                 Err err ->
                     ( { model | status = Failure err }, Cmd.none )
 
         LogClicked ->
-            ( { model | status = Loading }, postLog <| newLogEncoder model.input )
+            ( { model | status = Reloading }, postLog <| newLogEncoder model.input )
 
         ReadClicked ->
-            ( { model | status = Loading }, getLogs )
+            ( model, getLogs )
 
         FindClicked ->
-            ( { model | status = Loading }, queryLogs model.input )
+            ( { model | status = Reloading }, queryLogs model.input )
 
         ClearClicked ->
             ( model, Cmd.none )
@@ -143,36 +144,63 @@ mutedClr =
 
 view : Model -> Html Msg
 view model =
-    Element.layout [ width fill, Font.size 14, Font.color mainClr, Background.color bgClr ] <|
+    Element.layout
+        [ width fill
+        , Font.size 14
+        , Font.color mainClr
+        , Background.color bgClr
+        , padding 50
+        ]
+    <|
         column
-            [ width fill ]
+            [ width fill, spacing 50 ]
             [ inputFields model
             , case model.status of
                 Loading ->
                     text "loading..."
 
+                Reloading ->
+                    case model.data of
+                        Just resp ->
+                            logTable resp.data
+
+                        Nothing ->
+                            text "no data"
+
                 Failure err ->
                     text <| toString err
 
-                Success logHubRes ->
-                    logList <| List.reverse logHubRes.data
+                Success ->
+                    case model.data of
+                        Just resp ->
+                            logTable resp.data
+
+                        Nothing ->
+                            text "no data"
+
+            -- logList <| List.reverse logHubRes.data
             ]
 
 
 inputFields : Model -> Element Msg
 inputFields model =
-    el [ centerX ]
+    el
+        [ centerX
+        , width fill
+        ]
         (row
-            []
-            [ Input.text []
+            [ spacing 50
+            ]
+            [ Input.text
+                []
                 { onChange = InputChanged
                 , text = model.input
                 , placeholder = Nothing
-                , label = Input.labelLeft [] (text "search")
+                , label = Input.labelHidden "search"
 
                 -- , spellcheck = True
                 }
-            , btn "add too log" LogClicked
+            , btn "add to log" LogClicked
             , btn "list all logs" ReadClicked
             , btn "search" FindClicked
             , btn "clear results" ClearClicked
@@ -180,7 +208,33 @@ inputFields model =
         )
 
 
-logList : List Log -> Element Msg
+logTable : List GenericLog -> Element Msg
+logTable logs =
+    table
+        [ padding 10
+        , spacing 5
+        , Border.width 1
+        , Border.color mutedClr
+        ]
+        { data = logs
+        , columns =
+            [ { header = text "time"
+              , width = shrink
+              , view = \log -> text log.time
+              }
+            , { header = text "id"
+              , width = shrink
+              , view = \log -> text log.id
+              }
+            , { header = text "data"
+              , width = fill
+              , view = \log -> text log.data
+              }
+            ]
+        }
+
+
+logList : List GenericLog -> Element Msg
 logList list =
     column []
         (List.map
@@ -189,12 +243,12 @@ logList list =
         )
 
 
-logEl : Log -> Element Msg
+logEl : GenericLog -> Element Msg
 logEl log =
     paragraph [ width fill, Font.family [ Font.monospace ] ]
         [ text <| "id: " ++ log.id
         , text <| "time: " ++ log.time
-        , text <| "type: " ++ log.logType
+        , text <| "type: " ++ "generic"
         , el [ Font.color accentClr ] <| text <| log.data
         ]
 
@@ -202,7 +256,11 @@ logEl log =
 btn : String -> Msg -> Element Msg
 btn str msg =
     Input.button
-        []
+        [ Border.width 1
+        , padding 20
+        , mouseOver [ Border.color accentClr ]
+        , focused [ Border.color accentClr ]
+        ]
         { onPress = Just msg
         , label = text str
         }

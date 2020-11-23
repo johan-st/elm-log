@@ -1,7 +1,7 @@
 module Log exposing (..)
 
-import Html.Attributes exposing (method)
-import Json.Decode as D
+import Json.Decode exposing (Decoder, bool, list, string, succeed)
+import Json.Decode.Pipeline exposing (required)
 import Json.Encode as E
 
 
@@ -13,12 +13,12 @@ type alias LogHubResponse =
     { ok : Bool, data : List GenericLog }
 
 
-logHubResponseDecoder : D.Decoder LogHubResponse
+logHubResponseDecoder : Decoder LogHubResponse
 logHubResponseDecoder =
-    D.map2
+    succeed
         LogHubResponse
-        (D.field "ok" D.bool)
-        (D.field "data" (D.list logDecoder))
+        |> required "ok" bool
+        |> required "data" (list logDecoder)
 
 
 
@@ -48,13 +48,17 @@ type alias HTTP_requestLog =
     }
 
 
-logDecoder : D.Decoder GenericLog
+logDecoder : Decoder GenericLog
 logDecoder =
-    D.map3
+    succeed
         GenericLog
-        (D.field "_id" D.string)
-        (D.field "time" D.string)
-        (D.succeed "data")
+        |> required "_id" string
+        |> required "time" string
+        |> required "data" (succeed "data")
+
+
+
+-- |> required "data" string
 
 
 newLogEncoder : String -> E.Value
