@@ -7,9 +7,9 @@ const { env } = process;
 const chalk = require('chalk');
 const port = env.EXPRESS_PORT;
 const { logsRouter } = require('./logsRouter');
+const { Log } = require('./database');
 
-require('./database')
-  .Log()
+Log()
   .then(logs => {
     // MIDDLEWARE
     app.use(bodyParser.json());

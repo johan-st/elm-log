@@ -1,5 +1,6 @@
 module Log exposing (..)
 
+import Html.Attributes exposing (method)
 import Json.Decode as D
 import Json.Encode as E
 
@@ -9,7 +10,7 @@ import Json.Encode as E
 
 
 type alias LogHubResponse =
-    { ok : Bool, data : List Log }
+    { ok : Bool, data : List GenericLog }
 
 
 logHubResponseDecoder : D.Decoder LogHubResponse
@@ -24,26 +25,36 @@ logHubResponseDecoder =
 ---- LOG ----
 
 
-type alias Log =
+type Log
+    = Generic GenericLog
+    | HTTP_request HTTP_requestLog
+
+
+type alias GenericLog =
     { id : String
     , time : String
-    , logType : String
-    , data : ReqLog
+    , data : String
     }
 
 
-type alias ReqLog =
-    String
+type alias HTTP_requestLog =
+    { id : String
+    , time : String
+    , data :
+        { id : String
+        , method : String
+        , path : String
+        }
+    }
 
 
-logDecoder : D.Decoder Log
+logDecoder : D.Decoder GenericLog
 logDecoder =
-    D.map4
-        Log
+    D.map3
+        GenericLog
         (D.field "_id" D.string)
         (D.field "time" D.string)
-        (D.field "logType" D.string)
-        (D.field "data" D.string)
+        (D.succeed "data")
 
 
 newLogEncoder : String -> E.Value

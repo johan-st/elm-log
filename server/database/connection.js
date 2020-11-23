@@ -64,6 +64,9 @@ const connect = async (uri, user, pass, authSource, schemaName, schema) => {
     });
   });
   const Model = connection.model(schemaName, schema);
+  console.log(Model);
+  console.log(Model.collection);
+  console.log(Model.collection.name);
   return Model;
 };
 

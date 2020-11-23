@@ -17,18 +17,6 @@ const logger = logs => (req, res, next) => {
       break;
   }
 
-  // const log = new logs({
-  //   logType: 'HTTP_request',
-  //   data: {
-  //     id: req.id,
-  //     method: req.method,
-  //     path: req.path,
-  //     body: req.body,
-  //     query: req.query,
-  //     src: req.ip,
-  //   },
-  // });
-
   console.log(
     chalk.grey(req.id),
     method,
@@ -36,12 +24,8 @@ const logger = logs => (req, res, next) => {
     req.body,
     req.query
   );
-  // log
-  // .save()
-  // .then(res => console.log({ ok: true, data: res }))
-  // .catch(err => console.log(err));
+
   next();
-  // }
 };
 
 module.exports = { logger };
