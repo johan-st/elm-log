@@ -1,10 +1,8 @@
 const uuid = require('uuid');
 const chalk = require('chalk');
 
-const logger = logHub => (req, res, next) => {
+const logger = logs => (req, res, next) => {
   req.id = uuid.v4();
-  const query = req.query;
-  const body = req.body;
 
   let method;
   switch (req.method) {
@@ -19,16 +17,18 @@ const logger = logHub => (req, res, next) => {
       break;
   }
 
-  const log = new logHub({
-    logType: 'HTTP_request',
-    data: {
-      id: req.id,
-      method: req.method,
-      path: req.path,
-      body: req.body,
-      query: req.query,
-    },
-  });
+  // const log = new logs({
+  //   logType: 'HTTP_request',
+  //   data: {
+  //     id: req.id,
+  //     method: req.method,
+  //     path: req.path,
+  //     body: req.body,
+  //     query: req.query,
+  //     src: req.ip,
+  //   },
+  // });
+
   console.log(
     chalk.grey(req.id),
     method,
@@ -36,7 +36,10 @@ const logger = logHub => (req, res, next) => {
     req.body,
     req.query
   );
-  // log.save();
+  // log
+  // .save()
+  // .then(res => console.log({ ok: true, data: res }))
+  // .catch(err => console.log(err));
   next();
   // }
 };

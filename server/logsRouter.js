@@ -11,11 +11,11 @@ const errorHandler = (req, res, err) => {
     );
 };
 
-const logsRouter = logHub => {
+const logsRouter = logs => {
   // OPERATIONS
   // POST
   const postLog = (req, res) => {
-    const log = new logHub({
+    const log = new logs({
       logType: req.body.type || 'generic',
       data: req.body.data,
     });
@@ -28,7 +28,7 @@ const logsRouter = logHub => {
   // GET
   const getLogs = (req, res) => {
     if (req.query.q) {
-      logHub
+      logs
         .find({ data: { $regex: req.query.q, $options: 'i' } })
         .then(data => {
           res.status = 200;
@@ -36,7 +36,7 @@ const logsRouter = logHub => {
         })
         .catch(err => errorHandler(req, res, err));
     } else {
-      logHub
+      logs
         .find({})
         .then(allLogs => {
           res.status = 200;

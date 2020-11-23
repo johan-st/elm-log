@@ -9,7 +9,7 @@ const port = env.EXPRESS_PORT;
 const { logsRouter } = require('./logsRouter');
 
 require('./database')
-  .logs()
+  .Log()
   .then(logs => {
     // MIDDLEWARE
     app.use(bodyParser.json());
