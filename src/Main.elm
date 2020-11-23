@@ -1,12 +1,17 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Element exposing (..)
+import Element.Background as Background
+import Element.Border as Border
+import Element.Events exposing (onClick)
+import Element.Font as Font
+import Element.Input as Input
+import Html exposing (Html)
 import Http exposing (Error(..))
 import Json.Decode as D
 import Json.Encode as E
+import Log exposing (Log, LogHubResponse, logDecoder, logHubResponseDecoder, newLogEncoder)
 import Result exposing (Result)
 
 
@@ -15,19 +20,32 @@ import Result exposing (Result)
 
 
 type Status
-    = NotAsked
-    | Loading
-    | Success (List Log)
+    = Loading
+    | Success LogHubResponse
     | Failure Http.Error
 
 
+type Page
+    = ListLog
+    | AddLog String
+
+
+type alias Filter =
+    { logType : Maybe String }
+
+
 type alias Model =
-    { status : Status, input : String }
+    { status : Status, input : String, filter : Filter }
+
+
+initialModel : Model
+initialModel =
+    { status = Loading, input = "", filter = { logType = Nothing } }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model NotAsked "", getLogs )
+    ( initialModel, getLogs )
 
 
 
@@ -35,12 +53,13 @@ init =
 
 
 type Msg
-    = GotResponse (Result Http.Error (List Log))
+    = GotResponse (Result Http.Error LogHubResponse)
     | ClearClicked
-    | LogBtnClicked
-    | ReadBtnClicked
-    | FindBtnClicked
+    | LogClicked
+    | ReadClicked
+    | FindClicked
     | InputChanged String
+    | FilterChanged
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -54,20 +73,23 @@ update msg model =
                 Err err ->
                     ( { model | status = Failure err }, Cmd.none )
 
-        LogBtnClicked ->
+        LogClicked ->
             ( { model | status = Loading }, postLog <| newLogEncoder model.input )
 
-        ReadBtnClicked ->
+        ReadClicked ->
             ( { model | status = Loading }, getLogs )
 
-        FindBtnClicked ->
+        FindClicked ->
             ( { model | status = Loading }, queryLogs model.input )
 
         ClearClicked ->
-            ( { model | status = NotAsked }, Cmd.none )
+            ( model, Cmd.none )
 
         InputChanged val ->
             ( { model | input = val }, Cmd.none )
+
+        FilterChanged ->
+            ( model, Cmd.none )
 
 
 queryLogs : String -> Cmd Msg
@@ -99,45 +121,91 @@ postLog jsonValue =
 ---- VIEW ----
 
 
+bgClr : Color
+bgClr =
+    rgb255 33 33 33
+
+
+mainClr : Color
+mainClr =
+    rgb255 200 100 0
+
+
+accentClr : Color
+accentClr =
+    rgb255 50 200 200
+
+
+mutedClr : Color
+mutedClr =
+    rgb255 200 100 0
+
+
 view : Model -> Html Msg
 view model =
-    div []
-        [ inputFields model
-        , case model.status of
-            NotAsked ->
-                text "not asked"
+    Element.layout [ width fill, Font.size 14, Font.color mainClr, Background.color bgClr ] <|
+        column
+            [ width fill ]
+            [ inputFields model
+            , case model.status of
+                Loading ->
+                    text "loading..."
 
-            Loading ->
-                text "Loading."
+                Failure err ->
+                    text <| toString err
 
-            Failure err ->
-                text <| toString err
-
-            Success logs ->
-                div [] <|
-                    List.map
-                        (\log ->
-                            div [ class "log" ]
-                                [ p [ class "log__id" ] [ text <| "id: " ++ log.id ]
-                                , p [ class "log__time" ] [ text <| "time: " ++ log.time ]
-                                , p [ class "log__type" ] [ text <| "type: " ++ log.logType ]
-                                , p [ class "log__data" ] [ text <| "log: " ++ log.data ]
-                                ]
-                        )
-                        logs
-        ]
+                Success logHubRes ->
+                    logList <| List.reverse logHubRes.data
+            ]
 
 
-inputFields : Model -> Html Msg
+inputFields : Model -> Element Msg
 inputFields model =
-    div [ class "input-fields" ]
-        [ label [ for "raw-data" ] [ text "input: " ]
-        , input [ name "raw-data", value model.input, onInput InputChanged ] []
-        , button [ name "log", onClick <| LogBtnClicked ] [ text "log" ]
-        , button [ name "get logs", onClick <| ReadBtnClicked ] [ text "get logs" ]
-        , button [ name "search", onClick <| FindBtnClicked ] [ text "search" ]
-        , button [ name "clear", onClick <| ClearClicked ] [ text "Clear" ]
+    el [ centerX ]
+        (row
+            []
+            [ Input.text []
+                { onChange = InputChanged
+                , text = model.input
+                , placeholder = Nothing
+                , label = Input.labelLeft [] (text "search")
+
+                -- , spellcheck = True
+                }
+            , btn "add too log" LogClicked
+            , btn "list all logs" ReadClicked
+            , btn "search" FindClicked
+            , btn "clear results" ClearClicked
+            ]
+        )
+
+
+logList : List Log -> Element Msg
+logList list =
+    column []
+        (List.map
+            (\log -> logEl log)
+            list
+        )
+
+
+logEl : Log -> Element Msg
+logEl log =
+    paragraph [ width fill, Font.family [ Font.monospace ] ]
+        [ text <| "id: " ++ log.id
+        , text <| "time: " ++ log.time
+        , text <| "type: " ++ log.logType
+        , el [ Font.color accentClr ] <| text <| log.data
         ]
+
+
+btn : String -> Msg -> Element Msg
+btn str msg =
+    Input.button
+        []
+        { onPress = Just msg
+        , label = text str
+        }
 
 
 toString : Http.Error -> String
@@ -157,50 +225,6 @@ toString err =
 
         BadBody str ->
             "Bad Body: " ++ str
-
-
-
----- API SPECIFIC ----
-
-
-type alias LogHubResponse =
-    { ok : Bool, data : List Log }
-
-
-logHubResponseDecoder : D.Decoder (List Log)
-logHubResponseDecoder =
-    D.field "data" (D.list logDecoder)
-
-
-
----- LOG ----
-
-
-type alias Log =
-    { id : String
-    , time : String
-    , logType : String
-    , data : ReqLog
-    }
-
-
-type alias ReqLog =
-    String
-
-
-logDecoder : D.Decoder Log
-logDecoder =
-    D.map4
-        Log
-        (D.field "_id" D.string)
-        (D.field "time" D.string)
-        (D.field "logType" D.string)
-        (D.field "data" D.string)
-
-
-newLogEncoder : String -> E.Value
-newLogEncoder data =
-    E.object [ ( "data", E.string data ) ]
 
 
 
