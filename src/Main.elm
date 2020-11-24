@@ -189,7 +189,7 @@ inputFields model =
         , width fill
         ]
         (row
-            [ spacing 50
+            [ spacing 20
             ]
             [ Input.text
                 []
@@ -200,10 +200,8 @@ inputFields model =
 
                 -- , spellcheck = True
                 }
-            , btn "add to log" LogClicked
-            , btn "list all logs" ReadClicked
-            , btn "search" FindClicked
-            , btn "clear results" ClearClicked
+            , btn "find" FindClicked
+            , btn "list all" ReadClicked
             ]
         )
 

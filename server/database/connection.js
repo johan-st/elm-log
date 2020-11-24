@@ -15,9 +15,9 @@ const connect = async (uri, user, pass, authSource, schemaName, schema) => {
   };
   console.log(
     chalk.yellowBright('[MongoDB]'),
-    chalk.yellow('Connecting to'),
-    uri,
-    chalk.yellow('with'),
+    chalk.yellow('Connecting with'),
+    // uri,
+    // chalk.yellow('with'),
     options.user
   );
 
@@ -43,7 +43,8 @@ const connect = async (uri, user, pass, authSource, schemaName, schema) => {
 
   // If the connection throws an error
   connection.on('error', err => {
-    console.log(chalk.red(err.name), err);
+    console.log(chalk.red(err.name));
+    console.log(err);
   });
 
   // When the connection is disconnected
@@ -64,9 +65,11 @@ const connect = async (uri, user, pass, authSource, schemaName, schema) => {
     });
   });
   const Model = connection.model(schemaName, schema);
-  console.log(Model);
-  console.log(Model.collection);
-  console.log(Model.collection.name);
+  console.log(
+    chalk.greenBright('[MongoDB]'),
+    chalk.green('Connected to collection'),
+    Model.collection.name
+  );
   return Model;
 };
 

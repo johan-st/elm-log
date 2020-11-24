@@ -14,25 +14,26 @@ const errorHandler = (req, res, err) => {
 const logsRouter = logs => {
   // OPERATIONS
   // POST
-  const postLog = (req, res) => {
-    const log = new logs({
-      logType: req.body.type || 'generic',
-      data: req.body.data,
-    });
-    res.status = 200;
-    log
-      .save()
-      .then(data => res.json({ ok: true, data: [data] }))
-      .catch(err => errorHandler(req, res, err));
-  };
+  // const postLog = (req, res) => {
+  //   const log = new logs({
+  //     logType: req.body.type || 'generic',
+  //     data: req.body.data,
+  //   });
+  //   res.status = 200;
+  //   log
+  //     .save()
+  //     .then(data => res.json({ ok: true, data: [data] }))
+  //     .catch(err => errorHandler(req, res, err));
+  // };
   // GET
   const getLogs = (req, res) => {
     if (req.query.q) {
       logs
-        .find({ data: { $regex: req.query.q, $options: 'i' } })
+        .find({ data: { path: { $regex: req.query.q, $options: 'i' } } })
         .then(data => {
           res.status = 200;
           res.json({ ok: true, data: data });
+          console.log(JSON.stringify(data[0], null, 2));
         })
         .catch(err => errorHandler(req, res, err));
     } else {
@@ -48,7 +49,7 @@ const logsRouter = logs => {
 
   // ROUTES
   router.get('/', getLogs);
-  router.post('/', postLog);
+  // router.post('/', postLog);
   return router;
 };
 module.exports = { logsRouter };

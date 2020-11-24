@@ -30,5 +30,6 @@ Log()
   })
   .catch(err => {
     console.log(chalk.red(err));
+    console.log(err);
     process.exit(1);
   });
